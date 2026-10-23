@@ -1,0 +1,94 @@
+document.addEventListener('DOMContentLoaded', () => {
+  const htmlEl = document.documentElement;
+  const themeToggleBtn = document.getElementById('theme-toggle');
+  const themeIcon = document.getElementById('theme-icon');
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const navLinksContainer = document.getElementById('nav-links');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const copyEmailBtn = document.getElementById('copy-email-btn');
+  const copyStatus = document.getElementById('copy-status');
+
+  // 1. THEME TOGGLE (Persisted in localStorage)
+  const savedTheme = localStorage.getItem('shlok-theme') || 'dark';
+  htmlEl.setAttribute('data-theme', savedTheme);
+  themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+  themeToggleBtn.addEventListener('click', () => {
+    const currentTheme = htmlEl.getAttribute('data-theme');
+    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    htmlEl.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('shlok-theme', nextTheme);
+    themeIcon.textContent = nextTheme === 'dark' ? '☀️' : '🌙';
+  });
+
+  // 2. MOBILE NAVIGATION MENU
+  mobileMenuBtn.addEventListener('click', () => {
+    const isOpen = navLinksContainer.classList.toggle('open');
+    mobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      navLinksContainer.classList.remove('open');
+      mobileMenuBtn.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  // 3. INTERACTIVE ARCHITECTURE DRAWERS ON PROJECT CARDS
+  const archToggles = document.querySelectorAll('.arch-toggle');
+  archToggles.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const content = btn.nextElementSibling;
+      const arrow = btn.querySelector('.arch-arrow');
+      const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+
+      btn.setAttribute('aria-expanded', String(!isExpanded));
+      content.hidden = isExpanded;
+      arrow.textContent = isExpanded ? '▼' : '▲';
+    });
+  });
+
+  // 4. 1-CLICK EMAIL COPY FOR RECRUITERS
+  if (copyEmailBtn && copyStatus) {
+    copyEmailBtn.addEventListener('click', async () => {
+      const email = copyEmailBtn.getAttribute('data-email');
+      try {
+        await navigator.clipboard.writeText(email);
+        copyStatus.textContent = 'Copied to Clipboard!';
+        setTimeout(() => {
+          copyStatus.textContent = email;
+        }, 2200);
+      } catch {
+        window.location.href = `mailto:${email}`;
+      }
+    });
+  }
+
+  // 5. SCROLL-REVEAL INTERSECTION OBSERVER
+  const revealElements = document.querySelectorAll('.reveal');
+  const revealObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  revealElements.forEach(el => revealObserver.observe(el));
+
+  // 6. ACTIVE NAVBAR LINK HIGHLIGHT ON SCROLL
+  const sections = document.querySelectorAll('section[id]');
+  const navObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const currentId = entry.target.getAttribute('id');
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === `#${currentId}`);
+        });
+      }
+    });
+  }, { rootMargin: '-35% 0px -60% 0px' });
+
+  sections.forEach(section => navObserver.observe(section));
+});
